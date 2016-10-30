@@ -2,7 +2,7 @@ WORD  = 0
 POS   = 1
 HEAD  = 2
 LABEL = 3
-ROOT_ID  = 0
+ROOT_ID  = -1
 ROOT = "ROOT"
 NULL = "NULL"
 
@@ -27,7 +27,6 @@ def baseline_fex(config):
     if len(config.stack) > 0:
         s0_id = config.stack[-1]
         if s0_id is not ROOT_ID:
-            s0_id -= 1
             s0_word = config.sentence[s0_id][WORD]
             s0_pos  = config.sentence[s0_id][POS]
         else:
@@ -37,7 +36,6 @@ def baseline_fex(config):
     if len(config.buffer) > 0:
         b0_id = config.buffer[0]
         if b0_id is not ROOT_ID:
-            b0_id -= 1
             b0_word = config.sentence[b0_id][WORD]
             b0_pos  = config.sentence[b0_id][POS]
         else:
