@@ -75,19 +75,24 @@ class ArcStandard:
 
     @staticmethod
     def is_not_projective(config):
-        for dep1 in config.head_of.keys():
-            head1 = config.head_of[dep1]
-            for dep2 in config.head_of.keys():
-                head2 = config.head_of[dep2]
-                if dep1 > head2 and dep1 < dep2 and head1 < head1:
+        for d1 in config.head_of.keys():
+            h1 = config.head_of[d1]
+            for d2 in config.head_of.keys():
+                h2 = config.head_of[d2]
+                if h1 is ROOT or h2 is ROOT:
+                    continue
+                # h1 h2 d1 d2
+                if h1 < h2 and h2 < d1 and d1 < d2:
                     return True
-                if dep1 < head2 and dep1 > dep2 and head1 < dep2:
+                # d1 h2 h1 d2
+                if d1 < h2 and h2 < h1 and h1 < d2:
                     return True
-                if dep1 < head1 and head1 is not head2:
-                    if head1 > head2 and dep1 < dep2 and dep1 < head2:
-                        return True
-                    if head1 < head2 and head1 > dep2 and dep1 < dep2:
-                        return True
+                # h1 d2 d1 h2
+                if h1 < d2 and d2 < d1 and d1 < h2:
+                    return True
+                # d1 d2 h1 h2
+                if d1 < d2 and d2 < h1 and h1 < h2:
+                    return True
         return False
 
     @staticmethod
@@ -214,7 +219,7 @@ if __name__ == '__main__':
 
     f = 'en.tr100'
     ss = conll_util.read_conll_data(f)
-    sentence = ss[31]
+    sentence = ss[30]
     arcsys = ArcStandard()
     config = arcsys.get_initial_config(sentence)
     print config
@@ -223,7 +228,7 @@ if __name__ == '__main__':
     print gold_arcs
     print
 
-    if arcsys.is_projective(gold_config):
+    if not arcsys.is_not_projective(gold_config):
         while not arcsys.is_finished(config):
             action = arcsys.static_oracle(config, gold_config)
             print arcsys.TRANSITION_NAMES[action]
