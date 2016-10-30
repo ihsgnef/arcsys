@@ -15,7 +15,7 @@ def baseline_fex(config):
     pair of words at top of stack and head of buffer
     pair of coarse POS at top of stack and head of buffer
     '''
-    fv = {}
+    features = {}
     
     s0_word   = NULL
     b0_word   = NULL
@@ -45,11 +45,11 @@ def baseline_fex(config):
     s0b0_word = s0_word + '+' + b0_word
     s0b0_pos = s0_pos + '+' + b0_pos
 
-    fv['s0_word=' + s0_word] = 1
-    fv['b0_word=' + b0_word] = 1
-    fv['s0_pos=' + s0_pos] = 1
-    fv['b0_pos=' + b0_pos] = 1
-    fv['s0b0_word=' + s0b0_word] = 1
-    fv['s0b0_pos=' + s0b0_pos] = 1
+    features['s0_word=' + s0_word] = 1
+    features['b0_word=' + b0_word] = 1
+    features['s0_pos=' + s0_pos] = 1
+    features['b0_pos=' + b0_pos] = 1
+    features['s0b0_word=' + s0b0_word] = 1
+    features['s0b0_pos=' + s0b0_pos] = 1
 
-    return fv
+    return features

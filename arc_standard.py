@@ -1,3 +1,5 @@
+import conll_util
+
 WORD  = 0
 POS   = 1
 HEAD  = 2
@@ -70,6 +72,23 @@ class ArcStandard:
         and only root is left in stack
         '''
         return len(config.buffer) == 0 and len(config.stack) == 1
+
+    @staticmethod
+    def is_not_projective(config):
+        for dep1 in config.head_of.keys():
+            head1 = config.head_of[dep1]
+            for dep2 in config.head_of.keys():
+                head2 = config.head_of[dep2]
+                if dep1 > head2 and dep1 < dep2 and head1 < head1:
+                    return True
+                if dep1 < head2 and dep1 > dep2 and head1 < dep2:
+                    return True
+                if dep1 < head1 and head1 is not head2:
+                    if head1 > head2 and dep1 < dep2 and dep1 < head2:
+                        return True
+                    if head1 < head2 and head1 > dep2 and dep1 < dep2:
+                        return True
+        return False
 
     @staticmethod
     def get_legal_transitions(config):
@@ -163,7 +182,9 @@ class ArcStandard:
             return ArcStandard.SHIFT
         s = config.stack[-1]
         if s is not ROOT and b == gold_config.head_of[s]:
-            return ArcStandard.LEFT
+            arcs = gold_config.arcs - set(config.arcs)
+            if len([t for h, t in arcs if h == s]) == 0:
+                return ArcStandard.LEFT
         if s == gold_config.head_of[b]:
             # to do a right arc (s, b), 
             # need to make sure b doesn' have head left
@@ -174,19 +195,41 @@ class ArcStandard:
 
 
 if __name__ == '__main__':
-    sentence = "economic news had little effect on financial markets .".split()
+    # sentence = "economic news had little effect on financial markets .".split()
+    # arcsys = ArcStandard()
+    # transitions = [2, 0, 2, 0, 2, 2, 0, 2, 2, 2, 0, 1, 1, 1, 2, 1, 1, 2]
+    # config = arcsys.get_initial_config(sentence)
+    # print config
+    # 
+    # for t in transitions:
+    #     print arcsys.TRANSITION_NAMES[t]
+    #     if t in arcsys.get_legal_transitions(config):
+    #         config = arcsys.take_transition(config, t)
+    #         print config
+    #     else:
+    #         print 'not legal'
+    #     if arcsys.is_finished(config):
+    #         print 'finished'
+    #         break
+
+    f = 'en.tr100'
+    ss = conll_util.read_conll_data(f)
+    sentence = ss[31]
     arcsys = ArcStandard()
-    transitions = [2, 0, 2, 0, 2, 2, 0, 2, 2, 2, 0, 1, 1, 1, 2, 1, 1, 2]
     config = arcsys.get_initial_config(sentence)
     print config
-    
-    for t in transitions:
-        print arcsys.TRANSITION_NAMES[t]
-        if t in arcsys.get_legal_transitions(config):
-            config = arcsys.take_transition(config, t)
+    gold_config = arcsys.get_gold_config(sentence)
+    gold_arcs = gold_config.arcs
+    print gold_arcs
+    print
+
+    if arcsys.is_projective(gold_config):
+        while not arcsys.is_finished(config):
+            action = arcsys.static_oracle(config, gold_config)
+            print arcsys.TRANSITION_NAMES[action]
+            config = arcsys.take_transition(config, action)
             print config
-        else:
-            print 'not legal'
-        if arcsys.is_finished(config):
-            print 'finished'
-            break
+            print gold_arcs - set(config.arcs)
+            print
+    else:
+        print 'not projective'
