@@ -104,6 +104,7 @@ class ArcStandard:
 
         if len(config.buffer) == 0:
             # buffer is empty, cannot do right_arc or shift
+            is_legal[ArcStandard.LEFT] = False
             is_legal[ArcStandard.RIGHT] = False
             is_legal[ArcStandard.SHIFT] = False
         else:
