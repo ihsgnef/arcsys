@@ -1,3 +1,4 @@
+import random
 from collections import defaultdict
 
 class SimpleParser:
@@ -7,6 +8,9 @@ class SimpleParser:
         self.arcsys = arcsys
         self.fex = fex
         self.oracle = oracle
+
+        self.exploring = False
+        self.EXPLORE_P = 0.9
 
         self.current_update = 0
         self.previous_update = defaultdict(lambda: 0)
@@ -56,6 +60,8 @@ class SimpleParser:
         
         while not self.arcsys.is_finished(config):
             legal_transitions = self.arcsys.get_legal_transitions(config)
+            if len(legal_transitions) == 0:
+                break
             features = self.fex(config)
             scores = self.score(features)
             pred_transition = max(legal_transitions, key=lambda p: scores[p])
@@ -63,11 +69,21 @@ class SimpleParser:
             true_transition = max(zero_transitions, key=lambda t: scores[t])
             if pred_transition not in zero_transitions:
                 self.update(true_transition, pred_transition, features)
+                if self.exploring:
+                    config = self.explore(config, true_transition, pred_transition)
+                else:
+                    config = self.arcsys.take_transition(config, true_transition)
             else:
                 correct_transitions += 1
-            config = self.arcsys.take_transition(config, true_transition)
+                config = self.arcsys.take_transition(config, true_transition)
             total_transitions += 1
         return total_transitions, correct_transitions
+    
+    def explore(self, config, true_transition, pred_transition):
+        if random.random() < self.EXPLORE_P:
+            return self.arcsys.take_transition(config, pred_transition)
+        else:
+            return self.arcsys.take_transition(config, true_transition)
     
     def predict(self, sentence):
         config = self.arcsys.get_initial_config(sentence)

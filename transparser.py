@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument("valid_file", nargs="?", type=str, default="en.dev")
     parser.add_argument("-i", "--iters", type=int, default=15)
     parser.add_argument("-v", "--verbose", action='store_true', default=False)
+    parser.add_argument("-e", "--explore", type=int, default=1)
     return parser.parse_args()
 
 
@@ -51,7 +52,11 @@ if __name__ == '__main__':
 
     # training
     train_set, train_gold_configs = util.filter_non_projective(arcsys, train_set)
-    for i in xrange(args.iters):
+    for curr_iter in xrange(args.iters):
+        if curr_iter > args.explore and parser.exploring == False:
+            parser.exploring = True
+            if args.verbose:
+                print 'start exploring'
         idx = list(range(len(train_set)))
         random.shuffle(idx)
         train_set = [train_set[i] for i in idx]
@@ -63,20 +68,21 @@ if __name__ == '__main__':
             total_transitions += t
             correct_transitions += c
         if args.verbose:
-            print correct_transitions / total_transitions
+            print curr_iter, correct_transitions / total_transitions
 
     parser.average_weights()
 
     valid_set, valid_gold_configs = util.filter_non_projective(arcsys, valid_set)
-    total_arcs = 0.0
-    correct_arcs = 0.0
+    total_arcs = 0
+    correct_arcs = 0
     for sentence, gold_config in zip(valid_set, valid_gold_configs):
         arcs = parser.predict(sentence)
         correct = set(arcs).intersection(gold_config.arcs)
         total_arcs += len(gold_config.arcs)
         correct_arcs += len(correct)
     if args.verbose:
-        print 'eval:', correct_arcs / total_arcs
+        print 'eval:', str(correct_arcs) + '/' + str(total_arcs),
+        print correct_arcs * 1.0 / total_arcs
 
     # testing
     test_output = open(args.test_output, 'w')
