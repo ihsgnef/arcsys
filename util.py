@@ -20,8 +20,13 @@ def read_conll_data(file_path):
                 sentences.append(sentence)
                 sentence = []
                 continue
-            sentence.append((row[FORM].lower(), row[CPOSTAG], 
-                             int(row[HEAD]) - 1, row[DEPREL]))
+            if row[HEAD] != '_':
+                sentence.append((row[FORM].lower(), row[CPOSTAG], 
+                                int(row[HEAD]) - 1, row[DEPREL]))
+            else:
+                sentence.append((row[FORM].lower(), row[CPOSTAG], 
+                                row[HEAD], row[DEPREL]))
+
     return sentences
 
 

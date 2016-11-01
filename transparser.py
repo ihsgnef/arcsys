@@ -12,9 +12,10 @@ import depeval
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("train_file", nargs="?", type=str, default="en.tr100")
-    parser.add_argument("test_file", nargs="?", type=str, default="en.dev")
-    parser.add_argument("test_output", nargs="?", type=str, default="en.dev.out")
-    parser.add_argument("-i", "--iters", type=int, default=20)
+    parser.add_argument("test_file", nargs="?", type=str, default="en.tst")
+    parser.add_argument("test_output", nargs="?", type=str, default="en.tst.out")
+    parser.add_argument("valid_file", nargs="?", type=str, default="en.dev")
+    parser.add_argument("-i", "--iters", type=int, default=15)
     parser.add_argument("-v", "--verbose", action='store_true', default=False)
     return parser.parse_args()
 
@@ -39,6 +40,7 @@ def print_result(sentence, arcs, outfile):
 if __name__ == '__main__':
     args = parse_args()
     train_set = util.read_conll_data(args.train_file)
+    valid_set = util.read_conll_data(args.valid_file)
     test_set = util.read_conll_data(args.test_file)
 
     arcsys = ArcEager()
@@ -65,14 +67,20 @@ if __name__ == '__main__':
 
     parser.average_weights()
 
+    valid_set, valid_gold_configs = util.filter_non_projective(arcsys, valid_set)
+    total_arcs = 0.0
+    correct_arcs = 0.0
+    for sentence, gold_config in zip(valid_set, valid_gold_configs):
+        arcs = parser.predict(sentence)
+        correct = set(arcs).intersection(gold_config.arcs)
+        total_arcs += len(gold_config.arcs)
+        correct_arcs += len(correct)
+    if args.verbose:
+        print 'eval:', correct_arcs / total_arcs
+
     # testing
     test_output = open(args.test_output, 'w')
     for sentence in test_set:
         arcs = parser.predict(sentence)
         print_result(sentence, arcs, test_output)
     test_output.close()
-
-    # evaluation
-    if args.verbose:
-        print 'eval'
-        depeval.eval(args.test_file, args.test_output)
