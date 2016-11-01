@@ -4,6 +4,10 @@ from arc_standard import *
 from conll_util import *
 from feature_extractor import *
 
+train_file = 'en.tr100'
+valid_file = 'en.dev'
+n_epochs = 20
+
 class Parser:
 
     def __init__(self, arcsys, fex):
@@ -11,9 +15,9 @@ class Parser:
         self.arcsys = arcsys
         self.fex = fex
 
-        self.train_tick = 0
-        self.train_last_tick = defaultdict(lambda: 0)
-        self.train_totals = defaultdict(lambda: 0)
+        self.current_update = 0
+        self.previous_update = defaultdict(lambda: 0)
+        self.weight_accumulate = defaultdict(lambda: 0)
 
     def score(self, features):
         scores = dict((label, 0) for label in self.arcsys.TRANSITIONS)
@@ -24,15 +28,14 @@ class Parser:
                 scores[transition] += weight * value
         return scores
 
-    def avg_weights(self):
-        for fj in self.weights:
-            for label in self.weights[fj]:
-                total = self.train_totals[(fj, label)]
-                t_delt = self.train_tick - self.train_last_tick[(fj, label)]
-                total += t_delt * self.weights[fj][label]
-                avg = round(total / float(self.train_tick))
-                if avg:
-                    self.weights[fj][label] = avg
+    def average_weights(self):
+        for feature in self.weights:
+            for label in self.weights[feature]:
+                total = self.weight_accumulate[(feature, label)]
+                t_delta = self.current_update - self.previous_update[(feature, label)]
+                total += t_delta * self.weights[feature][label]
+                avg = total / float(self.current_update)
+                self.weights[feature][label] = avg
 
     def update(self, true_label, pred_label, features):
         def update_label_feature(label, feature, value):
@@ -41,13 +44,13 @@ class Parser:
             if label not in self.weights[feature]:
                 self.weights[feature][label] = 0
 
-            wv = self.weights[feature][label]
-
+            weight = self.weights[feature][label]
+            t_delta = self.current_update - self.previous_update[(feature, label)]
+            self.weight_accumulate[(feature, label)] += t_delta * weight
+            self.previous_update[(feature, label)] = self.current_update
             self.weights[feature][label] += value
-            t_delt = self.train_tick - self.train_last_tick[(feature, label)]
-            self.train_totals[(feature, label)] += t_delt * wv
-            self.train_last_tick[(feature, label)] = self.train_tick
 
+        self.current_update += 1
         for feature, value in features.items():
             update_label_feature(true_label, feature, value)
             update_label_feature(pred_label, feature, -value)
@@ -68,15 +71,7 @@ class Parser:
                 self.update(true_transition, pred_transition, features)
             else:
                 correct_transitions += 1
-            try:
-                config = self.arcsys.take_transition(config, true_transition)
-            except AssertionError:
-                print '***************'
-                print config
-                print
-                print gold_config.arcs - set(config.arcs)
-                print '***************'
-                break
+            config = self.arcsys.take_transition(config, true_transition)
             total_transitions += 1
         return total_transitions, correct_transitions
     
@@ -104,14 +99,14 @@ def filter_non_projective(arcsys, sentences):
     return projective, gold_configs
 
 if __name__ == '__main__':
-    train_set = read_conll_data('en.tr100')
-    valid_set = read_conll_data('en.dev')
+    train_set = read_conll_data(train_file)
+    valid_set = read_conll_data(valid_file)
     arcsys = ArcStandard()
     parser = Parser(arcsys, baseline_fex_1)
 
     train_set, train_gold_configs = filter_non_projective(arcsys, train_set)
     valid_set, valid_gold_configs = filter_non_projective(arcsys, valid_set)
-    for i in xrange(20):
+    for i in xrange(n_epochs):
         tt = 0
         cc = 0
         idx = list(range(len(train_set)))
@@ -124,7 +119,16 @@ if __name__ == '__main__':
             cc += c
         print tt, cc, cc * 1.0 / tt
 
-    # parser.avg_weights()
+    tt = 0
+    cc = 0
+    for sentence, gold_config in zip(valid_set, valid_gold_configs):
+        arcs = parser.predict(sentence)
+        correct_arcs = gold_config.arcs.intersection(set(arcs))
+        tt += len(gold_config.arcs)
+        cc += len(correct_arcs)
+    print tt, cc, cc * 1.0 / tt
+
+    parser.average_weights()
     tt = 0
     cc = 0
     for sentence, gold_config in zip(valid_set, valid_gold_configs):

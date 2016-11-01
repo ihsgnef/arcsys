@@ -144,7 +144,7 @@ def baseline_fex_1(config):
     features['b2_word_b2_pos=' + b2_word_b2_pos] = 1
     features['b0_pos_b1_pos=' + b0_pos_b1_pos] = 1
     features['s0_word_b0_word=' + s0_word_b0_word] = 1
-    # features['s0_pos_b0_pos=' + s0_pos_b0_pos] = 1
+    features['s0_pos_b0_pos=' + s0_pos_b0_pos] = 1
 
     features['b0_pos_b1_pos_b2_pos=' + b0_pos_b1_pos_b2_pos] = 1
     features['s0_pos_b0_pos_b1_pos=' + s0_pos_b0_pos_b1_pos] = 1
