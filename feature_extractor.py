@@ -30,7 +30,7 @@ def left_right_deps(arcs, head, sentence):
     return (NULL, NULL), (NULL, NULL)
 
 
-def baseline_fex_0(config):
+def baseline(config):
     sentence = sentence_to_dict(config.sentence)
     features = {}
 
@@ -61,7 +61,7 @@ def baseline_fex_0(config):
 
     return features
 
-def baseline_fex_1(config):
+def rich_baseline(config):
     sentence = sentence_to_dict(config.sentence)
     head_of = defaultdict(lambda : (NULL, NULL))
     for h, t in config.arcs:
@@ -69,89 +69,98 @@ def baseline_fex_1(config):
 
     features = {}
 
-    s0_word      = NULL # top stack word
-    s0_pos       = NULL # top stack pos
-    b0_word      = NULL # first buffer word
-    b0_pos       = NULL # first buffer pos
-    b1_word      = NULL # second buffer word
-    b1_pos       = NULL # second buffer pos
-    b2_word      = NULL # third buffer word
-    b2_pos       = NULL # third buffer pos
-    b0_head_pos  = NULL # pos of head of buffer first
-    b0_left_pos  = NULL # pos of left-most dependent of buffer first
-    b0_right_pos = NULL # pos of right-most dependent of buffer first
-    s0_head_pos  = NULL # pos of head of stack top
-    s0_left_pos  = NULL # pos of left-most dependent of stack top
-    s0_right_pos = NULL # pos of right-most dependent of stack top
+    s0w  = NULL # top stack word
+    s0p  = NULL # top stack pos
+    n0w  = NULL # first buffer word
+    n0p  = NULL # first buffer pos
+    n1w  = NULL # second buffer word
+    n1p  = NULL # second buffer pos
+    n2w  = NULL # third buffer word
+    n2p  = NULL # third buffer pos
+    s0hp = NULL # pos of head of stack top
+    s0lp = NULL # pos of left-most dependent of stack top
+    s0rp = NULL # pos of right-most dependent of stack top
+    n0lp = NULL # pos of right-most dependent of buffer first
+    
 
     if len(config.buffer) > 0:
         i = config.buffer[0]
-        b0_word = sentence[i][WORD]
-        b0_pos = sentence[i][POS]
-        left_dep, right_dep = left_right_deps(config.arcs, i, sentence)
-        b0_left_pos = left_dep[POS]
-        b0_right_pos = right_dep[POS]
-        b0_head_pos = head_of[i][POS]
+        n0w = sentence[i][WORD]
+        n0p = sentence[i][POS]
+
 
     if len(config.buffer) > 1:
         i = config.buffer[1]
-        b1_word = sentence[i][WORD]
-        b1_pos = sentence[i][POS]
+        n1w = sentence[i][WORD]
+        n1p = sentence[i][POS]
+        ldep, rdep = left_right_deps(config.arcs, i, sentence)
+        n0lp = ldep[POS]
 
     if len(config.buffer) > 2:
         i = config.buffer[2]
-        b2_word = sentence[i][WORD]
-        b2_pos = sentence[i][POS]
+        n2w = sentence[i][WORD]
+        n2p = sentence[i][POS]
 
     if len(config.stack) > 0:
         i = config.stack[-1]
-        s0_word = sentence[i][WORD]
-        s0_pos = sentence[i][POS]
-        left_dep, right_dep = left_right_deps(config.arcs, i, sentence)
-        s0_left_pos = left_dep[POS]
-        s0_right_pos = right_dep[POS]
-        s0_head_pos = head_of[i][POS]
+        s0w = sentence[i][WORD]
+        s0p = sentence[i][POS]
+        ldep, rdep = left_right_deps(config.arcs, i, sentence)
+        s0lp = ldep[POS]
+        s0rp = rdep[POS]
+        s0hp = head_of[i][POS]
 
-    b0_word_b0_pos = b0_word + "+" + b0_pos
-    b1_word_b1_pos = b1_word + "+" + b1_pos
-    b2_word_b2_pos = b2_word + "+" + b2_pos
-    b0_pos_b1_pos = b0_pos + "+" + b1_pos
-    s0_word_b0_word = s0_word + "+" + b0_word
-    s0_pos_b0_pos = s0_pos + "+" + b0_pos
+    s0wp = ';'.join([s0w, s0p])
+    n0wp = ';'.join([n0w, n0p])
+    n1wp = ';'.join([n1w, n1p])
+    n2wp = ';'.join([n2w, n2p])
     
-    b0_pos_b1_pos_b2_pos = b0_pos + "+" + b1_pos + "+" + b2_pos
-    s0_pos_b0_pos_b1_pos = s0_pos + "+" + b0_pos + "+" + b1_pos
-    s0_head_pos_b0_pos_b1_pos = s0_head_pos + "+" + b0_pos + "+" + b1_pos
-    s0_pos_s0_left_pos_b0_pos = s0_pos + "+" + s0_left_pos + "+" + b0_pos
-    s0_pos_s0_right_pos_b0_pos = s0_pos + "" + s0_right_pos + "+" + b0_pos
-    b0_pos_b0_left_pos_s0_pos = b0_pos + "+" + b0_left_pos + "+" + s0_pos
-    b0_pos_b0_right_pos_s0_pos = b0_pos + "+" + b0_right_pos + "+" + s0_pos
+    # from single words
+    features['s0wp=' + s0wp] = 1
+    features['s0w='  + s0w]  = 1
+    features['s0p='  + s0p]  = 1
+    features['n0wp=' + n0wp] = 1
+    features['n0w='  + n0w]  = 1
+    features['n0p='  + n0p]  = 1
+    features['n1wp=' + n1wp] = 1
+    features['n1w='  + n1w]  = 1
+    features['n1p='  + n1p]  = 1
+    features['n2wp=' + n2wp] = 1
+    features['n2w='  + n2w]  = 1
+    features['n2p='  + n2p]  = 1
 
-    features['b0_word=' + b0_word] = 1
-    features['b0_pos=' + b0_pos] = 1
-    features['s0_word=' + s0_word] = 1
-    features['s0_pos=' + s0_pos] = 1
-    features['s0_word_b0_word=' + s0_word_b0_word] = 1
-    features['s0_pos_b0_pos=' + s0_pos_b0_pos] = 1
+    s0wpn0wp = ';'.join([s0wp, n0wp])
+    s0wpn0w  = ';'.join([s0wp, n0w])
+    s0wn0wp  = ';'.join([s0w, n0wp])
+    s0wpn0p  = ';'.join([s0wp, n0p])
+    s0pn0wp  = ';'.join([s0p, n0wp])
+    s0wn0w   = ';'.join([s0w, n0w])
+    s0pn0p   = ';'.join([s0p, n0p])
+    n0pn1p   = ';'.join([n0p, n1p])
 
-    features['b1_word=' + b1_word] = 1
-    features['b1_pos=' + b1_pos] = 1
-    features['b2_word=' + b2_word] = 1
-    features['b2_pos=' + b2_pos] = 1
+    # from two pairs
+    features['s0wpn0wp=' + s0wpn0wp] = 1
+    features['s0wpn0w='  + s0wpn0w]  = 1
+    features['s0wn0wp='  + s0wn0wp]  = 1
+    features['s0wpn0p='  + s0wpn0p]  = 1
+    features['s0pn0wp='  + s0pn0wp]  = 1
+    features['s0wn0w='   + s0wn0w]   = 1
+    features['s0pn0p='   + s0pn0p]   = 1
+    features['n0pn1p='   + n0pn1p]   = 1
 
-    features['b0_word_b0_pos=' + b0_word_b0_pos] = 1
-    features['b1_word_b1_pos=' + b1_word_b1_pos] = 1
-    features['b2_word_b2_pos=' + b2_word_b2_pos] = 1
-    features['b0_pos_b1_pos=' + b0_pos_b1_pos] = 1
-    features['s0_word_b0_word=' + s0_word_b0_word] = 1
-    features['s0_pos_b0_pos=' + s0_pos_b0_pos] = 1
+    n0pn1pn2p  = ';'.join([n0p, n1p, n2p])
+    s0pn0pn1p  = ';'.join([s0p, n0p, n1p])
+    s0hps0pn0p = ';'.join([s0hp, s0p, n0p])
+    s0ps0lpn0p = ';'.join([s0p, s0lp, n0p])
+    s0ps0rpn0p = ';'.join([s0p, s0rp, n0p])
+    s0pn0pn0lp = ';'.join([s0p, n0p, n0lp])
 
-    features['b0_pos_b1_pos_b2_pos=' + b0_pos_b1_pos_b2_pos] = 1
-    features['s0_pos_b0_pos_b1_pos=' + s0_pos_b0_pos_b1_pos] = 1
-    features['s0_head_pos_b0_pos_b1_pos=' + s0_head_pos_b0_pos_b1_pos] = 1
-    features['s0_pos_s0_left_pos_b0_pos=' + s0_pos_s0_left_pos_b0_pos] = 1
-    features['s0_pos_s0_right_pos_b0_pos=' + s0_pos_s0_right_pos_b0_pos] = 1
-    features['b0_pos_b0_left_pos_s0_pos=' + b0_pos_b0_left_pos_s0_pos] = 1
-    features['b0_pos_b0_right_pos_s0_pos=' + b0_pos_b0_right_pos_s0_pos] = 1
+    # from three words
+    features['n0pn1pn2p  =' + n0pn1pn2p ] = 1 
+    features['s0pn0pn1p  =' + s0pn0pn1p ] = 1
+    features['s0hps0pn0p =' + s0hps0pn0p] = 1
+    features['s0ps0lpn0p =' + s0ps0lpn0p] = 1
+    features['s0ps0rpn0p =' + s0ps0rpn0p] = 1
+    features['s0pn0pn0lp =' + s0pn0pn0lp] = 1
 
     return features

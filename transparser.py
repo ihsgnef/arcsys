@@ -4,7 +4,7 @@ import random
 from arc_standard import ArcStandard
 from arc_eager import ArcEager
 from parser import SimpleParser
-from feature_extractor import baseline_fex_1
+from feature_extractor import *
 import util
 
 def parse_args():
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     test_set = util.read_conll_data(args.test_file)
 
     arcsys = ArcEager()
-    parser = SimpleParser(arcsys, baseline_fex_1)
+    parser = SimpleParser(arcsys, rich_baseline)
 
     # training
     train_set, train_gold_configs = util.filter_non_projective(arcsys, train_set)
