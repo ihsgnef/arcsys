@@ -5,6 +5,7 @@ def eval(ref_path,out_path):
     refs = ref_file.readlines()
     tst_file = open(out_path, "r")
     tsts = tst_file.readlines()
+    assert len(tsts) == len(refs)
 
     total = 0
     correct = 0

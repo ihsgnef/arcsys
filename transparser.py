@@ -7,6 +7,7 @@ from parser import SimpleParser
 from feature_extractor import *
 import util
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("train_file", nargs="?", type=str, default="en.tr100")
@@ -15,6 +16,7 @@ def parse_args():
     parser.add_argument("-i", "--iters", type=int, default=20)
     parser.add_argument("-v", "--verbose", action='store_true', default=False)
     return parser.parse_args()
+
 
 def print_result(sentence, arcs, outfile):
     head_of = dict()
@@ -31,6 +33,7 @@ def print_result(sentence, arcs, outfile):
         s += '\t_\t_\t_\n'
         outfile.write(s)
     outfile.write('\n')
+
 
 if __name__ == '__main__':
     args = parse_args()
@@ -55,6 +58,7 @@ if __name__ == '__main__':
             correct_transitions += c
         if args.verbose:
             print correct_transitions / total_transitions
+
     parser.average_weights()
 
     # testing

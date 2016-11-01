@@ -34,10 +34,10 @@ def baseline(config):
     sentence = sentence_to_dict(config.sentence)
     features = {}
 
-    s0_word      = NULL # top stack word
-    s0_pos       = NULL # top stack pos
-    b0_word      = NULL # first buffer word
-    b0_pos       = NULL # first buffer pos
+    s0_word = NULL # top stack word
+    s0_pos  = NULL # top stack pos
+    b0_word = NULL # first buffer word
+    b0_pos  = NULL # first buffer pos
 
     if len(config.buffer) > 0:
         i = config.buffer[0]
@@ -62,6 +62,10 @@ def baseline(config):
     return features
 
 def rich_baseline(config):
+    '''
+    baseline feature set from paper
+    Transition-based Dependency Parsing with Rich Non-local Features
+    '''
     sentence = sentence_to_dict(config.sentence)
     head_of = defaultdict(lambda : (NULL, NULL))
     for h, t in config.arcs:
@@ -162,5 +166,15 @@ def rich_baseline(config):
     features['s0ps0lpn0p =' + s0ps0lpn0p] = 1
     features['s0ps0rpn0p =' + s0ps0rpn0p] = 1
     features['s0pn0pn0lp =' + s0pn0pn0lp] = 1
+
+    return features
+
+def rich(config):
+    sentence = sentence_to_dict(config.sentence)
+    head_of = defaultdict(lambda : (NULL, NULL))
+    for h, t in config.arcs:
+        head_of[t] = sentence[h]
+
+    features = rich_baseline(config)
 
     return features
