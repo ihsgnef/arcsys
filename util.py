@@ -24,6 +24,13 @@ def read_conll_data(file_path):
                              int(row[HEAD]) - 1, row[DEPREL]))
     return sentences
 
-if __name__ == '__main__':
-    f = 'en.tr100'
-    ss = read_conll_data(f)
+
+def filter_non_projective(arcsys, sentences):
+    gold_configs = []
+    projective = []
+    for sentence in sentences:
+        gold_config = arcsys.get_gold_config(sentence)
+        if not arcsys.is_not_projective(gold_config):
+            gold_configs.append(gold_config)
+            projective.append(sentence)
+    return projective, gold_configs

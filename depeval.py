@@ -22,6 +22,8 @@ def eval(ref_path,out_path):
     print "%f%% (%d/%d)" % (float(correct)/total*100, correct, total)
                                 
 if __name__ == "__main__":
-    ref_path=sys.argv[1]
-    out_path=sys.argv[2]
+    # ref_path=sys.argv[1]
+    # out_path=sys.argv[2]
+    ref_path = 'en.dev'
+    out_path = 'en.dev.out'
     eval(ref_path,out_path)

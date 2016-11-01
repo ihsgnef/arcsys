@@ -1,5 +1,3 @@
-import conll_util
-
 WORD  = 0
 POS   = 1
 HEAD  = 2
@@ -218,8 +216,9 @@ if __name__ == '__main__':
     #         print 'finished'
     #         break
 
+    import util
     f = 'en.tr100'
-    ss = conll_util.read_conll_data(f)
+    ss = util.read_conll_data(f)
     sentence = ss[30]
     arcsys = ArcStandard()
     config = arcsys.get_initial_config(sentence)

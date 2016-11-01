@@ -1,15 +1,6 @@
-import random
 from collections import defaultdict
-from arc_standard import ArcStandard
-from arc_eager import ArcEager
-from conll_util import *
-from feature_extractor import *
 
-train_file = 'en.tr100'
-valid_file = 'en.dev'
-n_epochs = 20
-
-class Parser:
+class SimpleParser:
 
     def __init__(self, arcsys, fex):
         self.weights = {}
@@ -87,54 +78,3 @@ class Parser:
             pred_transition = max(legal_transitions, key=lambda p: scores[p])
             config = self.arcsys.take_transition(config, pred_transition)
         return config.arcs
-
-
-def filter_non_projective(arcsys, sentences):
-    gold_configs = []
-    projective = []
-    for sentence in sentences:
-        gold_config = arcsys.get_gold_config(sentence)
-        if not arcsys.is_not_projective(gold_config):
-            gold_configs.append(gold_config)
-            projective.append(sentence)
-    return projective, gold_configs
-
-if __name__ == '__main__':
-    train_set = read_conll_data(train_file)
-    valid_set = read_conll_data(valid_file)
-    arcsys = ArcEager()
-    parser = Parser(arcsys, baseline_fex_1)
-
-    train_set, train_gold_configs = filter_non_projective(arcsys, train_set)
-    valid_set, valid_gold_configs = filter_non_projective(arcsys, valid_set)
-    for i in xrange(n_epochs):
-        tt = 0
-        cc = 0
-        idx = list(range(len(train_set)))
-        random.shuffle(idx)
-        train_set = [train_set[i] for i in idx]
-        train_gold_configs = [train_gold_configs[i] for i in idx]
-        for sentence, gold_config in zip(train_set, train_gold_configs):
-            t, c = parser.train(sentence, gold_config)
-            tt += t
-            cc += c
-        print tt, cc, cc * 1.0 / tt
-
-    tt = 0
-    cc = 0
-    for sentence, gold_config in zip(valid_set, valid_gold_configs):
-        arcs = parser.predict(sentence)
-        correct_arcs = gold_config.arcs.intersection(set(arcs))
-        tt += len(gold_config.arcs)
-        cc += len(correct_arcs)
-    print tt, cc, cc * 1.0 / tt
-
-    parser.average_weights()
-    tt = 0
-    cc = 0
-    for sentence, gold_config in zip(valid_set, valid_gold_configs):
-        arcs = parser.predict(sentence)
-        correct_arcs = gold_config.arcs.intersection(set(arcs))
-        tt += len(gold_config.arcs)
-        cc += len(correct_arcs)
-    print tt, cc, cc * 1.0 / tt
