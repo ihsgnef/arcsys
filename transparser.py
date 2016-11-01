@@ -45,7 +45,7 @@ if __name__ == '__main__':
     parser = SimpleParser(
             arcsys, 
             rich_baseline, 
-            ArcEager.dynamic_oracle)
+            arcsys.dynamic_oracle)
 
     # training
     train_set, train_gold_configs = util.filter_non_projective(arcsys, train_set)

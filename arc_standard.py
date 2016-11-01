@@ -183,19 +183,24 @@ class ArcStandard:
             return None
         b = config.buffer[0]
         if len(config.stack) == 0:
-            return ArcStandard.SHIFT
+            return [ArcStandard.SHIFT]
         s = config.stack[-1]
         if s is not ROOT and b == gold_config.head_of[s]:
             arcs = gold_config.arcs - set(config.arcs)
             if len([t for h, t in arcs if h == s]) == 0:
-                return ArcStandard.LEFT
+                return [ArcStandard.LEFT]
         if s == gold_config.head_of[b]:
             # to do a right arc (s, b), 
             # need to make sure b doesn' have head left
             arcs = gold_config.arcs - set(config.arcs)
             if len([t for h, t in arcs if h == b]) == 0:
-                return ArcStandard.RIGHT
-        return ArcStandard.SHIFT
+                return [ArcStandard.RIGHT]
+        return [ArcStandard.SHIFT]
+    
+    @staticmethod
+    def dynamic_oracle(config, gold_config):
+        # ArcStandard doesn't have dynamic oracle
+        return static_oracle(config, gold_config)
 
 
 if __name__ == '__main__':
