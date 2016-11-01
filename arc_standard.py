@@ -103,7 +103,7 @@ class ArcStandard:
         is_legal = [True for _ in ArcStandard.TRANSITIONS]
 
         if len(config.buffer) == 0:
-            # buffer is empty, cannot do right_arc or shift
+            # buffer is empty, cannot do left_arc, right_arc or shift
             is_legal[ArcStandard.LEFT] = False
             is_legal[ArcStandard.RIGHT] = False
             is_legal[ArcStandard.SHIFT] = False

@@ -107,11 +107,11 @@ if __name__ == '__main__':
     train_set = read_conll_data('en.tr100')
     valid_set = read_conll_data('en.dev')
     arcsys = ArcStandard()
-    parser = Parser(arcsys, baseline_fex)
+    parser = Parser(arcsys, baseline_fex_1)
 
     train_set, train_gold_configs = filter_non_projective(arcsys, train_set)
     valid_set, valid_gold_configs = filter_non_projective(arcsys, valid_set)
-    for i in xrange(30):
+    for i in xrange(20):
         tt = 0
         cc = 0
         idx = list(range(len(train_set)))
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     # parser.avg_weights()
     tt = 0
     cc = 0
-    for sentence, gold_config in zip(train_set, train_gold_configs):
+    for sentence, gold_config in zip(valid_set, valid_gold_configs):
         arcs = parser.predict(sentence)
         correct_arcs = gold_config.arcs.intersection(set(arcs))
         tt += len(gold_config.arcs)
