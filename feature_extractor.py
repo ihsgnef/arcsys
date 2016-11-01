@@ -65,7 +65,7 @@ def baseline_fex_1(config):
     sentence = sentence_to_dict(config.sentence)
     head_of = defaultdict(lambda : (NULL, NULL))
     for h, t in config.arcs:
-        head_of[t] = h
+        head_of[t] = sentence[h]
 
     features = {}
 

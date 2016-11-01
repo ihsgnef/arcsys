@@ -152,7 +152,7 @@ class ArcStandard:
     @staticmethod
     def right_arc(config):
         '''
-        move buffer_first to stack
+        pop stack, replace buffer_first with stack_top
         add (stack_top, buffer_first)
         '''
         s = config.stack.pop()

@@ -1,6 +1,7 @@
 import random
 from collections import defaultdict
-from arc_standard import *
+from arc_standard import ArcStandard
+from arc_eager import ArcEager
 from conll_util import *
 from feature_extractor import *
 
@@ -101,7 +102,7 @@ def filter_non_projective(arcsys, sentences):
 if __name__ == '__main__':
     train_set = read_conll_data(train_file)
     valid_set = read_conll_data(valid_file)
-    arcsys = ArcStandard()
+    arcsys = ArcEager()
     parser = Parser(arcsys, baseline_fex_1)
 
     train_set, train_gold_configs = filter_non_projective(arcsys, train_set)
