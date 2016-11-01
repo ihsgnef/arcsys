@@ -2,10 +2,11 @@ from collections import defaultdict
 
 class SimpleParser:
 
-    def __init__(self, arcsys, fex):
+    def __init__(self, arcsys, fex, oracle):
         self.weights = {}
         self.arcsys = arcsys
         self.fex = fex
+        self.oracle = oracle
 
         self.current_update = 0
         self.previous_update = defaultdict(lambda: 0)
@@ -58,8 +59,9 @@ class SimpleParser:
             features = self.fex(config)
             scores = self.score(features)
             pred_transition = max(legal_transitions, key=lambda p: scores[p])
-            true_transition = self.arcsys.static_oracle(config, gold_config)
-            if pred_transition is not true_transition:
+            zero_transitions = self.oracle(config, gold_config)
+            true_transition = max(zero_transitions, key=lambda t: scores[t])
+            if pred_transition not in zero_transitions:
                 self.update(true_transition, pred_transition, features)
             else:
                 correct_transitions += 1

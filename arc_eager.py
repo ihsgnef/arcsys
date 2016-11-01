@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 WORD  = 0
 POS   = 1
 HEAD  = 2
@@ -23,7 +25,7 @@ class GoldConfiguration:
 
     def __init__(self):
         self.head_of = {}
-        self.deps_of = {}
+        self.deps_of = defaultdict(lambda : [])
         self.arcs = set()
 
 
@@ -59,8 +61,6 @@ class ArcEager:
         for i in xrange(len(sentence)):
             head = sentence[i][HEAD]
             gold_config.head_of[i] = head
-            if head not in gold_config.deps_of:
-                gold_config.deps_of[head] = []
             gold_config.deps_of[head].append(i)
             gold_config.arcs.add((head, i))
         return gold_config
@@ -193,21 +193,104 @@ class ArcEager:
             if len(config.stack) == 0:
                 return None
             else:
-                return ArcEager.REDUCE
+                return [ArcEager.REDUCE]
         b = config.buffer[0]
         if len(config.stack) == 0:
-            return ArcEager.SHIFT
+            return [ArcEager.SHIFT]
         s = config.stack[-1]
         if s is not ROOT and b == gold_config.head_of[s]:
-            return ArcEager.LEFT
+            return [ArcEager.LEFT]
         if s == gold_config.head_of[b]:
-            return ArcEager.RIGHT
+            return [ArcEager.RIGHT]
         if gold_config.head_of[b] < s:
-            return ArcEager.REDUCE
+            return [ArcEager.REDUCE]
         if b in gold_config.deps_of:
             if len([x for x in gold_config.deps_of[b] if x < s]):
-                return ArcEager.REDUCE
-        return ArcEager.SHIFT
+                return [ArcEager.REDUCE]
+        return [ArcEager.SHIFT]
+
+    @staticmethod
+    def dynamic_oracle(config, gold_config):
+        transitions = []
+        legal = ArcEager.get_legal_transitions(config)
+        is_ok = dict((t, t in legal) for t in ArcEager.TRANSITIONS)
+        
+        if is_ok[ArcEager.LEFT]:
+            if ArcEager.left_arc_cost(config, gold_config):
+                is_ok[ArcEager.LEFT] = False
+        if is_ok[ArcEager.RIGHT]:
+            if ArcEager.right_arc_cost(config, gold_config):
+                is_ok[ArcEager.RIGHT] = False
+        if is_ok[ArcEager.SHIFT]:
+            if ArcEager.shift_cost(config, gold_config):
+                is_ok[ArcEager.SHIFT] = False
+        if is_ok[ArcEager.REDUCE]:
+            if ArcEager.reduce_cost(config, gold_config):
+                is_ok[ArcEager.REDUCE] = False
+
+        ok_transitions = [t for t, ok in is_ok.items() if ok]
+        return ok_transitions
+    
+    @staticmethod
+    def left_arc_cost(config, gold_config):
+        '''
+        cost: number of arcs (k, s) and (s, k) in gold_config with k in buffer
+        '''
+        assert len(config.stack) > 0 and len(config.buffer) > 0
+        b = config.buffer[0]
+        s = config.stack[-1]
+        assert s is not ROOT
+        if (b, s) in gold_config.arcs:
+            return 0
+        ks = [gold_config.head_of[s]]
+        ks += gold_config.deps_of[s]
+        cost = len(set(ks).intersection(set(config.buffer)))
+        return cost
+
+    @staticmethod
+    def right_arc_cost(config, gold_config):
+        '''
+        cost: number of arcs (k, b) in gold_config with k in stack or buffer
+        and number of arcs (b, k) in gold_config with k in stack
+        '''
+        assert len(config.stack) > 0 and len(config.buffer) > 0
+        b = config.buffer[0]
+        s = config.stack[-1]
+        assert b is not ROOT
+        if (s, b) in gold_config.arcs:
+            return 0
+        cost = 0
+        cost += gold_config.head_of[b] in config.stack
+        cost += gold_config.head_of[b] in config.buffer
+        ks = set(gold_config.deps_of[b])
+        cost += len(ks.intersection(set(config.stack)))
+        return cost
+
+    @staticmethod
+    def shift_cost(config, gold_config):
+        '''
+        cost: number of arcs (k, b) and (b, k) in gold_config with k in stack
+        '''
+        assert len(config.buffer) > 0
+        b = config.buffer[0]
+        cost = 0
+        for k in config.stack:
+            cost += k == gold_config.head_of[b]
+            cost += k in gold_config.deps_of[b]
+        cost = max(0, cost)
+        return cost
+
+    @staticmethod
+    def reduce_cost(config, gold_config):
+        '''
+        cost: number of arcs (s, k) in gold_config with k in buffer
+        '''
+        assert len(config.stack) > 0
+        s = config.stack[-1]
+        deps = set(gold_config.deps_of[s])
+        cost = len(deps.intersection(set(config.buffer)))
+        return cost
+
 
 if __name__ == '__main__':
     # sentence = "economic news had little effect on financial markets .".split()

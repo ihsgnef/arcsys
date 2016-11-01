@@ -6,6 +6,7 @@ from arc_eager import ArcEager
 from parser import SimpleParser
 from feature_extractor import *
 import util
+import depeval
 
 
 def parse_args():
@@ -41,7 +42,10 @@ if __name__ == '__main__':
     test_set = util.read_conll_data(args.test_file)
 
     arcsys = ArcEager()
-    parser = SimpleParser(arcsys, rich_baseline)
+    parser = SimpleParser(
+            arcsys, 
+            rich_baseline, 
+            ArcEager.dynamic_oracle)
 
     # training
     train_set, train_gold_configs = util.filter_non_projective(arcsys, train_set)
@@ -62,7 +66,13 @@ if __name__ == '__main__':
     parser.average_weights()
 
     # testing
-    test_out_file = open(args.test_output, 'w')
+    test_output = open(args.test_output, 'w')
     for sentence in test_set:
         arcs = parser.predict(sentence)
-        print_result(sentence, arcs, test_out_file)
+        print_result(sentence, arcs, test_output)
+    test_output.close()
+
+    # evaluation
+    if args.verbose:
+        print 'eval'
+        depeval.eval(args.test_file, args.test_output)
