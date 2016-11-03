@@ -1,17 +1,19 @@
 import random
+import functools
 from collections import defaultdict
+from multiprocessing import Pool
+
+random.seed(543)
 
 class SimpleParser:
 
     def __init__(self, arcsys, fex, oracle):
-        self.weights = {}
+        self.weights = dict()
         self.arcsys = arcsys
         self.fex = fex
         self.oracle = oracle
-
         self.exploring = False
         self.EXPLORE_P = 0.9
-
         self.current_update = 0
         self.previous_update = defaultdict(lambda: 0)
         self.weight_accumulate = defaultdict(lambda: 0)
@@ -34,30 +36,28 @@ class SimpleParser:
                 avg = total / float(self.current_update)
                 self.weights[feature][label] = avg
 
+    def update_weights(self, label, pair):
+        feature, value = pair
+        if feature not in self.weights:
+            self.weights[feature] = {}
+        if label not in self.weights[feature]:
+            self.weights[feature][label] = 0
+        weight = self.weights[feature][label]
+        t_delta = self.current_update - self.previous_update[(feature, label)]
+        self.weight_accumulate[(feature, label)] += t_delta * weight
+        self.previous_update[(feature, label)] = self.current_update
+        self.weights[feature][label] += value
+
     def update(self, true_label, pred_label, features):
-        def update_label_feature(label, feature, value):
-            if feature not in self.weights:
-                self.weights[feature] = {}
-            if label not in self.weights[feature]:
-                self.weights[feature][label] = 0
-
-            weight = self.weights[feature][label]
-            t_delta = self.current_update - self.previous_update[(feature, label)]
-            self.weight_accumulate[(feature, label)] += t_delta * weight
-            self.previous_update[(feature, label)] = self.current_update
-            self.weights[feature][label] += value
-
         self.current_update += 1
         for feature, value in features.items():
-            update_label_feature(true_label, feature, value)
-            update_label_feature(pred_label, feature, -value)
+            self.update_weights(true_label, (feature, value))
+            self.update_weights(pred_label, (feature, -value))
 
     def train(self, sentence, gold_config):
         config = self.arcsys.get_initial_config(sentence)
-        # gold_config = self.arcsys.get_gold_config(sentence)
-        total_transitions = 0
-        correct_transitions = 0
-        
+        total = 0
+        correct = 0
         while not self.arcsys.is_finished(config):
             legal_transitions = self.arcsys.get_legal_transitions(config)
             if len(legal_transitions) == 0:
@@ -74,10 +74,10 @@ class SimpleParser:
                 else:
                     config = self.arcsys.take_transition(config, true_transition)
             else:
-                correct_transitions += 1
+                correct += 1
                 config = self.arcsys.take_transition(config, true_transition)
-            total_transitions += 1
-        return total_transitions, correct_transitions
+            total += 1
+        return total, correct
     
     def explore(self, config, true_transition, pred_transition):
         if random.random() < self.EXPLORE_P:

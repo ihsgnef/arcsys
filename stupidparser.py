@@ -40,23 +40,21 @@ def print_result(sentence, arcs, outfile):
 
 if __name__ == '__main__':
     args = parse_args()
+    random.seed(321)
     train_set = util.read_conll_data(args.train_file)
     valid_set = util.read_conll_data(args.valid_file)
     test_set = util.read_conll_data(args.test_file)
 
-    arcsys = ArcEager()
-    parser = SimpleParser(
-            arcsys, 
-            rich_baseline, 
-            arcsys.dynamic_oracle)
+    arcsys = ArcStandard()
+    parser = SimpleParser(arcsys, baseline, arcsys.static_oracle)
 
     # training
     train_set, train_gold_configs = util.filter_non_projective(arcsys, train_set)
     for curr_iter in xrange(args.iters):
-        if curr_iter > args.explore and parser.exploring == False:
-            parser.exploring = True
-            if args.verbose:
-                print 'start exploring'
+        # if curr_iter > args.explore and parser.exploring == False:
+        #     parser.exploring = True
+        #     if args.verbose:
+        #         print 'start exploring'
         idx = list(range(len(train_set)))
         random.shuffle(idx)
         train_set = [train_set[i] for i in idx]

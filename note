@@ -1,0 +1,7 @@
+- TODO
+  - multiprocessing update
+
+- exploration
+1. explore and update (original) 81.776
+2. explore not update, don't take true transition 81.499
+3. explore not update, take true transition 81.495
