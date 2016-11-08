@@ -70,7 +70,8 @@ if __name__ == '__main__':
 
     parser.average_weights()
 
-    valid_set, valid_gold_configs = util.filter_non_projective(arcsys, valid_set)
+    # valid_set, valid_gold_configs = util.filter_non_projective(arcsys, valid_set)
+    valid_gold_configs = [arcsys.get_gold_config(s) for s in valid_set]
     total_arcs = 0
     correct_arcs = 0
     for sentence, gold_config in zip(valid_set, valid_gold_configs):

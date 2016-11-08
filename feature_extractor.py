@@ -81,11 +81,14 @@ def rich_baseline(config):
     n1p  = NULL # second buffer pos
     n2w  = NULL # third buffer word
     n2p  = NULL # third buffer pos
+    s0hw = NULL # word of head of stack top
     s0hp = NULL # pos of head of stack top
+    s0lw = NULL # word of left-most dependent of stack top
     s0lp = NULL # pos of left-most dependent of stack top
+    s0rw = NULL # word of right-most dependent of stack top
     s0rp = NULL # pos of right-most dependent of stack top
+    n0lw = NULL # word of right-most dependent of buffer first
     n0lp = NULL # pos of right-most dependent of buffer first
-    
 
     if len(config.buffer) > 0:
         i = config.buffer[0]
@@ -98,6 +101,7 @@ def rich_baseline(config):
         n1w = sentence[i][WORD]
         n1p = sentence[i][POS]
         ldep, rdep = left_right_deps(config.arcs, i, sentence)
+        n0lw = ldep[WORD]
         n0lp = ldep[POS]
 
     if len(config.buffer) > 2:
@@ -110,8 +114,11 @@ def rich_baseline(config):
         s0w = sentence[i][WORD]
         s0p = sentence[i][POS]
         ldep, rdep = left_right_deps(config.arcs, i, sentence)
+        s0lw = ldep[WORD]
         s0lp = ldep[POS]
+        s0rw = rdep[WORD]
         s0rp = rdep[POS]
+        s0hw = head_of[i][WORD]
         s0hp = head_of[i][POS]
 
     s0wp = ';'.join([s0w, s0p])
@@ -142,7 +149,7 @@ def rich_baseline(config):
     s0pn0p   = ';'.join([s0p, n0p])
     n0pn1p   = ';'.join([n0p, n1p])
 
-    # from two pairs
+    # from word pairs
     features['s0wpn0wp=' + s0wpn0wp] = 1
     features['s0wpn0w='  + s0wpn0w]  = 1
     features['s0wn0wp='  + s0wn0wp]  = 1
@@ -166,6 +173,16 @@ def rich_baseline(config):
     features['s0ps0lpn0p =' + s0ps0lpn0p] = 1
     features['s0ps0rpn0p =' + s0ps0rpn0p] = 1
     features['s0pn0pn0lp =' + s0pn0pn0lp] = 1
+
+    # unigrams
+    features['s0hw=' + s0hw] = 1
+    features['s0hp=' + s0hp] = 1
+    features['s0lw=' + s0lw] = 1
+    features['s0lp=' + s0lp] = 1
+    features['s0rw=' + s0rw] = 1
+    features['s0rp=' + s0rp] = 1
+    features['n0lw=' + n0lw] = 1
+    features['n0lp=' + n0lp] = 1
 
     return features
 

@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument("-i", "--iters", type=int, default=15)
     parser.add_argument("-v", "--verbose", action='store_true', default=False)
     parser.add_argument("-e", "--explore", type=int, default=1)
+    parser.add_argument("-s", "--static", action='store_true', default=False)
     return parser.parse_args()
 
 
@@ -47,10 +48,8 @@ if __name__ == '__main__':
     test_set = util.read_conll_data(args.test_file)
 
     arcsys = ArcEager()
-    parser = SimpleParser(
-            arcsys, 
-            rich_baseline, 
-            arcsys.dynamic_oracle)
+    oracle = arcsys.static_oracle if args.static else arcsys.dynamic_oracle
+    parser = SimpleParser(arcsys, rich_baseline, oracle)
 
     # training
     train_set, train_gold_configs = util.filter_non_projective(arcsys, train_set)
