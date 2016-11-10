@@ -18,17 +18,19 @@ def sentence_to_dict(sentence):
     return s
 
 
-def left_right_deps(arcs, head, sentence):
+def dep_info(arcs, head, sentence):
     '''
     get the left-most and right-most dependents of the given head
     '''
     deps  = [d for h, d in arcs if h == head]
     deps.sort()
+    vl = len([x for x in deps if x < head])
+    vr = len([x for x in deps if x > head])
     l0 = (NULL, NULL) if len(deps) == 0 else sentence[deps[0]]
     r0 = (NULL, NULL) if len(deps) == 0 else sentence[deps[-1]]
     l1 = (NULL, NULL) if len(deps) < 2 else sentence[deps[1]]
     r1 = (NULL, NULL) if len(deps) < 2 else sentence[deps[-2]]
-    return l0, l1, r1, r0
+    return l0, l1, r1, r0, vl, vr
 
 
 def baseline(config):
@@ -100,16 +102,25 @@ def rich_baseline(config):
     s0r2p = NULL
     n0l2w = NULL
     n0l2p = NULL
+    # valency
+    n0wvl = NULL
+    n0pvl = NULL
+    s0wvl = NULL
+    s0wvr = NULL
+    s0pvl = NULL
+    s0pvr = NULL
 
     if len(config.buffer) > 0:
         i = config.buffer[0]
         n0w = sentence[i][WORD]
         n0p = sentence[i][POS]
-        l0, l1, r1, r0 = left_right_deps(config.arcs, i, sentence)
+        l0, l1, r1, r0, vl, vr = dep_info(config.arcs, i, sentence)
         n0lw = l0[WORD]
         n0lp = l0[POS]
         n0l2w = l1[WORD]
         n0lrp = l1[POS]
+        n0wvl = n0w + '-' + str(vl)
+        n0pvl = n0p + '-' + str(vl)
 
     if len(config.buffer) > 1:
         i = config.buffer[1]
@@ -125,7 +136,7 @@ def rich_baseline(config):
         i = config.stack[-1]
         s0w = sentence[i][WORD]
         s0p = sentence[i][POS]
-        l0, l1, r1, r0 = left_right_deps(config.arcs, i, sentence)
+        l0, l1, r1, r0, vl, vr = dep_info(config.arcs, i, sentence)
         s0lw = l0[WORD]
         s0lp = l0[POS]
         s0rw = r0[WORD]
@@ -136,6 +147,10 @@ def rich_baseline(config):
         s0r2p = r1[POS]
         s0hw = head_of[i][WORD]
         s0hp = head_of[i][POS]
+        s0wvl = s0w + '-' + str(vl)
+        s0wvr = s0w + '-' + str(vr)
+        s0pvl = s0p + '-' + str(vl)
+        s0pvr = s0p + '-' + str(vr)
 
     if len(config.stack) > 1:
         i = config.stack[-2]
@@ -210,22 +225,30 @@ def rich_baseline(config):
     features['s0ps0rpn0p =' + s0ps0rpn0p] = 1
     features['s0pn0pn0lp =' + s0pn0pn0lp] = 1
 
-    # # unigrams
-    # features['s0hw=' + s0hw] = 1
-    # features['s0hp=' + s0hp] = 1
-    # features['s0lw=' + s0lw] = 1
-    # features['s0lp=' + s0lp] = 1
-    # features['s0rw=' + s0rw] = 1
-    # features['s0rp=' + s0rp] = 1
-    # features['n0lw=' + n0lw] = 1
-    # features['n0lp=' + n0lp] = 1
-    # 
-    # # third order
-    # features['s0l2w=' + s0l2w] = 1
-    # features['s0l2p=' + s0l2p] = 1
-    # features['s0r2w=' + s0r2w] = 1
-    # features['s0r2p=' + s0r2p] = 1
-    # features['n0l2w=' + n0l2w] = 1
-    # features['n0l2p=' + n0l2p] = 1
+    # unigrams
+    features['s0hw=' + s0hw] = 1
+    features['s0hp=' + s0hp] = 1
+    features['s0lw=' + s0lw] = 1
+    features['s0lp=' + s0lp] = 1
+    features['s0rw=' + s0rw] = 1
+    features['s0rp=' + s0rp] = 1
+    features['n0lw=' + n0lw] = 1
+    features['n0lp=' + n0lp] = 1
+    
+    # third order
+    features['s0l2w=' + s0l2w] = 1
+    features['s0l2p=' + s0l2p] = 1
+    features['s0r2w=' + s0r2w] = 1
+    features['s0r2p=' + s0r2p] = 1
+    features['n0l2w=' + n0l2w] = 1
+    features['n0l2p=' + n0l2p] = 1
+
+    # valency
+    features['n0wvl=' + n0wvl] = 1
+    features['n0pvl=' + n0pvl] = 1
+    features['s0wvl=' + s0wvl] = 1
+    features['s0wvr=' + s0wvr] = 1
+    features['s0pvl=' + s0pvl] = 1
+    features['s0pvr=' + s0pvr] = 1
 
     return features
