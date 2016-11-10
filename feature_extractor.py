@@ -185,13 +185,3 @@ def rich_baseline(config):
     features['n0lp=' + n0lp] = 1
 
     return features
-
-def rich(config):
-    sentence = sentence_to_dict(config.sentence)
-    head_of = defaultdict(lambda : (NULL, NULL))
-    for h, t in config.arcs:
-        head_of[t] = sentence[h]
-
-    features = rich_baseline(config)
-
-    return features
