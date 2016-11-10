@@ -76,6 +76,10 @@ def rich_baseline(config):
 
     s0w  = NULL # top stack word
     s0p  = NULL # top stack pos
+    s1w  = NULL # top stack word
+    s1p  = NULL # top stack pos
+    s2w  = NULL # top stack word
+    s2p  = NULL # top stack pos
     n0w  = NULL # first buffer word
     n0p  = NULL # first buffer pos
     n1w  = NULL # second buffer word
@@ -101,17 +105,16 @@ def rich_baseline(config):
         i = config.buffer[0]
         n0w = sentence[i][WORD]
         n0p = sentence[i][POS]
-
-
-    if len(config.buffer) > 1:
-        i = config.buffer[1]
-        n1w = sentence[i][WORD]
-        n1p = sentence[i][POS]
         l0, l1, r1, r0 = left_right_deps(config.arcs, i, sentence)
         n0lw = l0[WORD]
         n0lp = l0[POS]
         n0l2w = l1[WORD]
         n0lrp = l1[POS]
+
+    if len(config.buffer) > 1:
+        i = config.buffer[1]
+        n1w = sentence[i][WORD]
+        n1p = sentence[i][POS]
 
     if len(config.buffer) > 2:
         i = config.buffer[2]
@@ -134,24 +137,44 @@ def rich_baseline(config):
         s0hw = head_of[i][WORD]
         s0hp = head_of[i][POS]
 
+    if len(config.stack) > 1:
+        i = config.stack[-2]
+        s1w = sentence[i][WORD]
+        s1p = sentence[i][POS]
+
+    if len(config.stack) > 2:
+        i = config.stack[-3]
+        s2w = sentence[i][WORD]
+        s2p = sentence[i][POS]
+
     s0wp = ';'.join([s0w, s0p])
+    s1wp = ';'.join([s1w, s1p])
+    s2wp = ';'.join([s2w, s2p])
     n0wp = ';'.join([n0w, n0p])
     n1wp = ';'.join([n1w, n1p])
     n2wp = ';'.join([n2w, n2p])
     
     # from single words
-    features['s0wp=' + s0wp] = 1
+
     features['s0w='  + s0w]  = 1
+    features['s1w='  + s1w]  = 1
+    features['s2w='  + s2w]  = 1
     features['s0p='  + s0p]  = 1
-    features['n0wp=' + n0wp] = 1
+    features['s1p='  + s1p]  = 1
+    features['s2p='  + s2p]  = 1
+    features['s0wp=' + s0wp] = 1
+    features['s1wp=' + s1wp] = 1
+    features['s2wp=' + s2wp] = 1
+
     features['n0w='  + n0w]  = 1
-    features['n0p='  + n0p]  = 1
-    features['n1wp=' + n1wp] = 1
     features['n1w='  + n1w]  = 1
-    features['n1p='  + n1p]  = 1
-    features['n2wp=' + n2wp] = 1
     features['n2w='  + n2w]  = 1
+    features['n0p='  + n0p]  = 1
+    features['n1p='  + n1p]  = 1
     features['n2p='  + n2p]  = 1
+    features['n0wp=' + n0wp] = 1
+    features['n1wp=' + n1wp] = 1
+    features['n2wp=' + n2wp] = 1
 
     s0wpn0wp = ';'.join([s0wp, n0wp])
     s0wpn0w  = ';'.join([s0wp, n0w])
@@ -187,22 +210,22 @@ def rich_baseline(config):
     features['s0ps0rpn0p =' + s0ps0rpn0p] = 1
     features['s0pn0pn0lp =' + s0pn0pn0lp] = 1
 
-    # unigrams
-    features['s0hw=' + s0hw] = 1
-    features['s0hp=' + s0hp] = 1
-    features['s0lw=' + s0lw] = 1
-    features['s0lp=' + s0lp] = 1
-    features['s0rw=' + s0rw] = 1
-    features['s0rp=' + s0rp] = 1
-    features['n0lw=' + n0lw] = 1
-    features['n0lp=' + n0lp] = 1
-    
-    # third order
-    features['s0l2w=' + s0l2w] = 1
-    features['s0l2p=' + s0l2p] = 1
-    features['s0r2w=' + s0r2w] = 1
-    features['s0r2p=' + s0r2p] = 1
-    features['n0l2w=' + n0l2w] = 1
-    features['n0l2p=' + n0l2p] = 1
+    # # unigrams
+    # features['s0hw=' + s0hw] = 1
+    # features['s0hp=' + s0hp] = 1
+    # features['s0lw=' + s0lw] = 1
+    # features['s0lp=' + s0lp] = 1
+    # features['s0rw=' + s0rw] = 1
+    # features['s0rp=' + s0rp] = 1
+    # features['n0lw=' + n0lw] = 1
+    # features['n0lp=' + n0lp] = 1
+    # 
+    # # third order
+    # features['s0l2w=' + s0l2w] = 1
+    # features['s0l2p=' + s0l2p] = 1
+    # features['s0r2w=' + s0r2w] = 1
+    # features['s0r2p=' + s0r2p] = 1
+    # features['n0l2w=' + n0l2w] = 1
+    # features['n0l2p=' + n0l2p] = 1
 
     return features

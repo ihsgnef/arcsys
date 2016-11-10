@@ -48,6 +48,9 @@ def main(arcsys, parser):
 
     # training
     train_set, train_gold_configs = util.filter_non_projective(arcsys, train_set)
+    if args.verbose:
+        print 'feature size', 
+        print len(parser.fex(arcsys.get_initial_config(train_set[0])))
     for curr_iter in xrange(args.iters):
         if curr_iter > args.explore and parser.exploring == False:
             parser.exploring = True
@@ -70,10 +73,9 @@ def main(arcsys, parser):
 
     parser.average_weights()
 
-    # valid_set, valid_gold_configs = util.filter_non_projective(arcsys, valid_set)
+    # validation
+    total_arcs, correct_arcs = 0, 0
     valid_gold_configs = [arcsys.get_gold_config(s) for s in valid_set]
-    total_arcs = 0
-    correct_arcs = 0
     valid_output = open(args.valid_file + '.out', 'w')
     for sentence, gold_config in zip(valid_set, valid_gold_configs):
         arcs = parser.predict(sentence)
