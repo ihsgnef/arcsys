@@ -23,11 +23,12 @@ def left_right_deps(arcs, head, sentence):
     get the left-most and right-most dependents of the given head
     '''
     deps  = [d for h, d in arcs if h == head]
-    if len(deps):
-        left = min(deps)
-        right = max(deps)
-        return sentence[left], sentence[right]
-    return (NULL, NULL), (NULL, NULL)
+    deps.sort()
+    l0 = (NULL, NULL) if len(deps) == 0 else sentence[deps[0]]
+    r0 = (NULL, NULL) if len(deps) == 0 else sentence[deps[-1]]
+    l1 = (NULL, NULL) if len(deps) < 2 else sentence[deps[1]]
+    r1 = (NULL, NULL) if len(deps) < 2 else sentence[deps[-2]]
+    return l0, l1, r1, r0
 
 
 def baseline(config):
@@ -89,6 +90,12 @@ def rich_baseline(config):
     s0rp = NULL # pos of right-most dependent of stack top
     n0lw = NULL # word of right-most dependent of buffer first
     n0lp = NULL # pos of right-most dependent of buffer first
+    s0l2w = NULL
+    s0l2p = NULL
+    s0r2w = NULL
+    s0r2p = NULL
+    n0l2w = NULL
+    n0l2p = NULL
 
     if len(config.buffer) > 0:
         i = config.buffer[0]
@@ -100,9 +107,11 @@ def rich_baseline(config):
         i = config.buffer[1]
         n1w = sentence[i][WORD]
         n1p = sentence[i][POS]
-        ldep, rdep = left_right_deps(config.arcs, i, sentence)
-        n0lw = ldep[WORD]
-        n0lp = ldep[POS]
+        l0, l1, r1, r0 = left_right_deps(config.arcs, i, sentence)
+        n0lw = l0[WORD]
+        n0lp = l0[POS]
+        n0l2w = l1[WORD]
+        n0lrp = l1[POS]
 
     if len(config.buffer) > 2:
         i = config.buffer[2]
@@ -113,11 +122,15 @@ def rich_baseline(config):
         i = config.stack[-1]
         s0w = sentence[i][WORD]
         s0p = sentence[i][POS]
-        ldep, rdep = left_right_deps(config.arcs, i, sentence)
-        s0lw = ldep[WORD]
-        s0lp = ldep[POS]
-        s0rw = rdep[WORD]
-        s0rp = rdep[POS]
+        l0, l1, r1, r0 = left_right_deps(config.arcs, i, sentence)
+        s0lw = l0[WORD]
+        s0lp = l0[POS]
+        s0rw = r0[WORD]
+        s0rp = r0[POS]
+        s0l2w = l1[WORD]
+        s0l2p = l1[POS]
+        s0r2w = r1[WORD]
+        s0r2p = r1[POS]
         s0hw = head_of[i][WORD]
         s0hp = head_of[i][POS]
 
@@ -183,5 +196,13 @@ def rich_baseline(config):
     features['s0rp=' + s0rp] = 1
     features['n0lw=' + n0lw] = 1
     features['n0lp=' + n0lp] = 1
+    
+    # third order
+    features['s0l2w=' + s0l2w] = 1
+    features['s0l2p=' + s0l2p] = 1
+    features['s0r2w=' + s0r2w] = 1
+    features['s0r2p=' + s0r2p] = 1
+    features['n0l2w=' + n0l2w] = 1
+    features['n0l2p=' + n0l2p] = 1
 
     return features
