@@ -64,10 +64,28 @@ def baseline(config):
 
     return features
 
-def rich_baseline(config):
+def rich(config):
     '''
-    baseline feature set from paper
-    Transition-based Dependency Parsing with Rich Non-local Features
+    from single word (18):
+    s0w s1w s2w s0p s1p s2p s0wp s1wp s2wp 
+    n0w n1w n2w n0p n1p n2p n0wp n1wp n2wp
+
+    from word pairs (8):
+    s0wpn0wp s0wpn0w s0wn0wp s0wpn0p 
+    s0pn0wp s0wn0w s0pn0p n0pn1p 
+    
+    from three words (6)
+    n0pn1pn2p s0pn0pn1p s0hps0pn0p 
+    s0ps0lpn0p s0ps0rpn0p s0pn0pn0lp 
+    
+    unigrams (8):
+    s0hw s0hp s0lw s0lp s0rw s0rp n0lw n0lp
+
+    third-order (6):
+    s0l2w s0l2p s0r2w s0r2p n0l2w n0l2p
+
+    valency (6):
+    n0wvl n0pvl s0wvl s0wvr s0pvl s0pvr
     '''
     sentence = sentence_to_dict(config.sentence)
     head_of = defaultdict(lambda : (NULL, NULL))
@@ -96,19 +114,18 @@ def rich_baseline(config):
     s0rp = NULL # pos of right-most dependent of stack top
     n0lw = NULL # word of right-most dependent of buffer first
     n0lp = NULL # pos of right-most dependent of buffer first
-    s0l2w = NULL
+    s0l2w = NULL 
     s0l2p = NULL
     s0r2w = NULL
     s0r2p = NULL
     n0l2w = NULL
     n0l2p = NULL
-    # valency
-    n0wvl = NULL
-    n0pvl = NULL
-    s0wvl = NULL
-    s0wvr = NULL
-    s0pvl = NULL
-    s0pvr = NULL
+    n0wvl = NULL # left valency and word of buffer first
+    n0pvl = NULL # left valency and pos of buffer first
+    s0wvl = NULL # left valency and word of stack top
+    s0wvr = NULL # right valency and word of stack top
+    s0pvl = NULL # left valency and pos of stack top
+    s0pvr = NULL # right valency and word of stack top
 
     if len(config.buffer) > 0:
         i = config.buffer[0]
@@ -168,7 +185,23 @@ def rich_baseline(config):
     n0wp = ';'.join([n0w, n0p])
     n1wp = ';'.join([n1w, n1p])
     n2wp = ';'.join([n2w, n2p])
-    
+
+    s0wpn0wp = ';'.join([s0wp, n0wp])
+    s0wpn0w  = ';'.join([s0wp, n0w])
+    s0wn0wp  = ';'.join([s0w, n0wp])
+    s0wpn0p  = ';'.join([s0wp, n0p])
+    s0pn0wp  = ';'.join([s0p, n0wp])
+    s0wn0w   = ';'.join([s0w, n0w])
+    s0pn0p   = ';'.join([s0p, n0p])
+    n0pn1p   = ';'.join([n0p, n1p])
+
+    n0pn1pn2p  = ';'.join([n0p, n1p, n2p])
+    s0pn0pn1p  = ';'.join([s0p, n0p, n1p])
+    s0hps0pn0p = ';'.join([s0hp, s0p, n0p])
+    s0ps0lpn0p = ';'.join([s0p, s0lp, n0p])
+    s0ps0rpn0p = ';'.join([s0p, s0rp, n0p])
+    s0pn0pn0lp = ';'.join([s0p, n0p, n0lp])
+
     # from single words
 
     features['s0w='  + s0w]  = 1
@@ -180,7 +213,6 @@ def rich_baseline(config):
     features['s0wp=' + s0wp] = 1
     features['s1wp=' + s1wp] = 1
     features['s2wp=' + s2wp] = 1
-
     features['n0w='  + n0w]  = 1
     features['n1w='  + n1w]  = 1
     features['n2w='  + n2w]  = 1
@@ -191,15 +223,6 @@ def rich_baseline(config):
     features['n1wp=' + n1wp] = 1
     features['n2wp=' + n2wp] = 1
 
-    s0wpn0wp = ';'.join([s0wp, n0wp])
-    s0wpn0w  = ';'.join([s0wp, n0w])
-    s0wn0wp  = ';'.join([s0w, n0wp])
-    s0wpn0p  = ';'.join([s0wp, n0p])
-    s0pn0wp  = ';'.join([s0p, n0wp])
-    s0wn0w   = ';'.join([s0w, n0w])
-    s0pn0p   = ';'.join([s0p, n0p])
-    n0pn1p   = ';'.join([n0p, n1p])
-
     # from word pairs
     features['s0wpn0wp=' + s0wpn0wp] = 1
     features['s0wpn0w='  + s0wpn0w]  = 1
@@ -209,13 +232,6 @@ def rich_baseline(config):
     features['s0wn0w='   + s0wn0w]   = 1
     features['s0pn0p='   + s0pn0p]   = 1
     features['n0pn1p='   + n0pn1p]   = 1
-
-    n0pn1pn2p  = ';'.join([n0p, n1p, n2p])
-    s0pn0pn1p  = ';'.join([s0p, n0p, n1p])
-    s0hps0pn0p = ';'.join([s0hp, s0p, n0p])
-    s0ps0lpn0p = ';'.join([s0p, s0lp, n0p])
-    s0ps0rpn0p = ';'.join([s0p, s0rp, n0p])
-    s0pn0pn0lp = ';'.join([s0p, n0p, n0lp])
 
     # from three words
     features['n0pn1pn2p  =' + n0pn1pn2p ] = 1 

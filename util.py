@@ -22,10 +22,10 @@ def read_conll_data(file_path):
                 continue
             if row[HEAD] != '_':
                 sentence.append((row[FORM].lower(), row[CPOSTAG], 
-                                int(row[HEAD]) - 1, row[DEPREL]))
+                                int(row[HEAD]) - 1, row[DEPREL], row[FORM], row[POSTAG]))
             else:
                 sentence.append((row[FORM].lower(), row[CPOSTAG], 
-                                row[HEAD], row[DEPREL]))
+                                row[HEAD], row[DEPREL], row[FORM], row[POSTAG]))
 
     return sentences
 

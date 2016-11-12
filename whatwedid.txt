@@ -1,0 +1,129 @@
+[Baseline]
+
+As per the instructions, we implemented a transition-based dependency parser
+using the arc-standard transition system, a perceptron algorithm (with
+averaging), and a set of 6 basic features. In training the perceptron, we
+used 15 iterations and randomly shuffled the order of the training examples
+for each iteration. Each iteration also uses the same learning rate of 1.
+
+When training on the small dataset (en.tr100), the accuracy on the
+development dataset (en.dev) is 39.52%.
+
+
+[Improved: More Features]
+
+We first try to improve the performance of the parser by considering more
+features. We looked at the work of Zhang et al. [2], as mentioned in the
+project description, which suggests a large number of potential features in
+Table 1 and Table 2. We used all the features in the following categories:
+from single words, from word pairs, from three words, unigrams, third order,
+and valency. This brought our total number of features from 6 to 52. For the
+full feature list, please refer to feature_extractor.py.
+
+Small dataset: 39.52% -> 70.72%
+Large dataset: 44.39% -> 82.39%
+
+These features lead to a large improvement in the accuracy of arc-standard-based
+parser, more so when training on the large dataset. This is because some of the
+higher-order features might not be observed in the smaller dataset.
+
+
+[Improved: Arc-Eager]
+
+Since arc-standard doesn't satisfy arc-decomposition property, which is required
+for dynamic oracle, we implemented an alternative transition system, arc-eager.
+
+Small dataset: 39.52% -> 58.93% (with 6 baseline features)
+Large dataset: 44.39% -> 64.87% (with 6 baseline features)
+Large dataset: 82.39% -> 82.31% (with all features)
+
+With the same classifier and the same set of baseline features, arc-eager
+achieved a large improvement over arc-standard, training on either the small
+dataset or the large one. This improvement comes from the fact that arc-eager is
+more flexible on right-arcs. Because of the extra reduce action, in arc-eager,
+building a right-arc does not require all the left-arc in the sub-tree, so when
+the classifier made a mistake on some left-arc, this won't affect right-arcs as
+much as in arc-standard system.
+
+This advantage of arc-eager over arc-standard is far less prominent when the
+accuracy of the classifier is high. We observe that, when using all 52
+features and training on the large dataset, the difference in performance is
+much smaller and arc-standard is even slightly better. We later ran with
+several different random seeds (instead of a fixed seed) in order to look at
+the averaged performance of the arc-standard vs arc-eager system when using
+all features and the large dataset. We observed a marginal (< 0.1%) increase
+in performance when using the arc-eager system.
+
+
+[Improved: Arc-Eager w/ Dynamic Oracle]
+
+Small dataset: 58.93% -> 59.11% (with 6 baseline features)
+Large dataset: 64.87% -> 65.12% (with 6 baseline features)
+Large dataset: 82.31% -> 81.77% (with all features)
+
+With static oracle, the parser only sees configurations on the gold transition
+path, however during testing, the parser can take wrong transitions and arrive
+at configurations its hasn't seen during training. The purpose of dynamic oracle
+proposed by Goldberg et al. [1] is to provide oracles for configurations that is
+not on the gold transition path. And it is most useful when paired with
+exploration, so that the parser can learn to recover from mistakes, bridging the
+gap between training and testing (to some extent).  Initially, we did not
+incorporate a ChooseNext function for exploration and instead used the oracle
+transition (i.e., the highest scoring zero-cost transition) as the next
+transition.
+
+
+[Improved: Arc-Eager w/ Dynamic Oracle + Exploration]
+
+Building on dynamic oracle, we added exploration. We use a similar approach to
+one of the options presented by Goldberg et al. [1]. We start exploring after
+some (k) iterations over the training set have been completed.  While exploring,
+we choose the next transition by selecting the predicted transition with
+probability (p) and the oracle transition with probability (1-p). We found that
+k = 2 and p = 0.9 work well.
+
+Small dataset: 59.11% -> 59.95% (with 6 baseline features)
+Large dataset: 65.12% -> 66.57% (with 6 baseline features)
+Large dataset: 81.77% -> 84.01% (with all features)        
+
+The last result on the large dataset with all the features finally provides
+a significant improvement over the initial improvement by using the
+arc-standard system with more (52 vs. 6) features. Exploration proves to be
+useful when utilizing the dynamic oracle and especially with a large dataset
+that allows for more exploration-based transitions to take place during
+training.
+
+
+[Overall Results]
+
+All of the reported values are the accuracy percentage when evaluated on the
+development data set.
+
+Small dataset, 6 features:
+    39.52, arc-standard
+    58.93, arc-eager
+    59.11, + dynamic oracle
+    59.95, + exploration
+
+Large dataset, 6 features:
+    44.39, arc-standard
+    64.87, arc-eager
+    65.12, + dynamic oracle
+    66.57, + exploration
+
+Large dataset, 52 features:
+    82.39, arc-standard
+    82.31, arc-eager
+    81.77, + dynamic oracle
+    84.01, + exploration
+
+
+[References]
+
+[1] Goldberg, Yoav, and Joakim Nivre. "A Dynamic Oracle for Arc-Eager
+Dependency Parsing." COLING. 2012.
+
+[2] Zhang, Yue, and Joakim Nivre. "Transition-based dependency parsing with
+rich non-local features." Proceedings of the 49th Annual Meeting of the
+Association for Computational Linguistics: Human Language Technologies:
+Short Papers-Volume 2. Association for Computational Linguistics, 2011.
